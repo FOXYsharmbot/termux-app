@@ -29,9 +29,8 @@ jobs:
         run: |
           export JAVA_HOME="$JAVA_HOME_17_X64"
           export PATH="$JAVA_HOME/bin:$PATH"
-          echo 'distributionSha256Sum=72f44c9f8ebcb1af43838f45ee5c4aa9c5444898b3468ab3f4af7b6076c5bc3f25' >> gradle/wrapper/gradle-wrapper.properties
-          echo 'distributionSha256Sum=8e722ec21e955201e31447b0aed14201765a3bfbae296a46cf60b70e66db70' >> termux-api/gradle/wrapper/gradle-wrapper.properties
-          sdkmanager 'platforms;android-36' 'platforms;android-35' 'ndk;29.0.14206865'
+          echo 'distributionSha256Sum=72f44c9f8ebcb1af43838f45ee5c4aa9c5444898b3468ab3f4af7b6076c5bc3f' >> gradle/wrapper/gradle-wrapper.properties
+          echo 'distributionSha256Sum=258e722ec21e955201e31447b0aed14201765a3bfbae296a46cf60b70e66db70' >> termux-api/gradle/wrapper/gradle-wrapper.properties
           ./gradlew --no-daemon assembleRelease testDebugUnitTest
           (cd termux-api && ./gradlew --no-daemon assembleRelease testDebugUnitTest)
           mkdir dist
