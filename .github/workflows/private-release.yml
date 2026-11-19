@@ -1,0 +1,46 @@
+name: Build unsigned Termux release
+on:
+  push:
+    branches: [android16-private-release]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      TERMUX_PACKAGE_VARIANT: apt-android-7
+      TERMUX_SPLIT_APKS_FOR_RELEASE_BUILDS: '1'
+      TERMUX_APP_VERSION_NAME: 0.118.0+8629e632
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          repository: FOXYsharmbot/termux-api
+          ref: fc26ce17e3badf85d4df191af364fcf7798047f1
+          path: termux-api
+          persist-credentials: false
+      - uses: gradle/actions/wrapper-validation@8da46b539cd8fe6ab27ca75128919a18d757604c
+      - name: Build and test unsigned releases
+        shell: bash
+        run: |
+          export JAVA_HOME="$JAVA_HOME_17_X64"
+          export PATH="$JAVA_HOME/bin:$PATH"
+          echo 'distributionSha256Sum=72f44c9f8ebcb1af43838f45ee5c4aa9c5444898b3468ab3f4af7b6076c5bc3f25' >> gradle/wrapper/gradle-wrapper.properties
+          echo 'distributionSha256Sum=8e722ec21e955201e31447b0aed14201765a3bfbae296a46cf60b70e66db70' >> termux-api/gradle/wrapper/gradle-wrapper.properties
+          sdkmanager 'platforms;android-36' 'platforms;android-35' 'ndk;29.0.14206865'
+          ./gradlew --no-daemon assembleRelease testDebugUnitTest
+          (cd termux-api && ./gradlew --no-daemon assembleRelease testDebugUnitTest)
+          mkdir dist
+          cp app/build/outputs/apk/release/*_arm64-v8a.apk dist/termux-arm64-v8a-unsigned.apk
+          cp termux-api/app/build/outputs/apk/release/*.apk dist/termux-api-unsigned.apk
+          (cd dist && sha256sum *.apk > SHA256SUMS)
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: termux-unsigned
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
